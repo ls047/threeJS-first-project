@@ -1,6 +1,7 @@
 const canvasSketch = require('canvas-sketch');
 const THREE = require('three');
 
+document.title = '🌌 SPACE';
 document.documentElement.style.webkitTapHighlightColor = 'transparent';
 document.body.style.margin = '0';
 document.body.style.overflow = 'hidden';
