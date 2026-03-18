@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "sketch.js",
   "scripts": {
-    "build": "canvas-sketch sketch.js --build --dir public --name index && npx copyfiles \"textures/**\" public",
+    "build": "canvas-sketch sketch.js --build --dir public --name index && npx copyfiles \"textures/**\" \"images/**\" \"audio/**\" public",
     "dev": "canvas-sketch sketch.js --dir . --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

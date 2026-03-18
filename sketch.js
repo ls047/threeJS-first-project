@@ -40,6 +40,9 @@ const planets = [
 function loadTexture(path) {
   const texture = textureLoader.load(path);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
   return texture;
 }
 
@@ -55,7 +58,54 @@ function makeStarTexture() {
   g.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(canvas);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.generateMipmaps = false;
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+function createStarBackgroundTexture(w, h) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const starCount = 350;
+  const stars = [];
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random(),
+      y: Math.random(),
+      size: 0.2 + Math.random() * 0.5,
+      alpha: 0.35 + Math.random() * 0.4
+    });
+  }
+  function draw(dw, dh) {
+    const pw = Math.pow(2, Math.ceil(Math.log2(Math.max(1, dw))));
+    const ph = Math.pow(2, Math.ceil(Math.log2(Math.max(1, dh))));
+    canvas.width = Math.min(pw, 2048);
+    canvas.height = Math.min(ph, 1024);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      const x = s.x * canvas.width;
+      const y = s.y * canvas.height;
+      const size = Math.max(0.5, s.size * (Math.min(canvas.width, canvas.height) / 1000));
+      const g = ctx.createRadialGradient(x, y, 0, x, y, size);
+      g.addColorStop(0, `rgba(255,255,255,${s.alpha})`);
+      g.addColorStop(0.4, `rgba(255,255,255,${s.alpha * 0.3})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  draw(w || 1920, h || 1080);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+  return { texture, draw };
 }
 
 function hexToRgba(hex, alpha) {
@@ -221,6 +271,7 @@ function createDialog() {
   previewBox.appendChild(previewCanvas);
 
   const text = document.createElement('div');
+  text.className = 'dialog-scroll';
   text.style.flex = '1';
   text.style.display = 'flex';
   text.style.flexDirection = 'column';
@@ -230,6 +281,42 @@ function createDialog() {
   text.style.overflowY = 'auto';
   text.style.overflowX = 'hidden';
   wrap.appendChild(text);
+
+  if (!document.getElementById('dialog-scrollbar-style')) {
+    const style = document.createElement('style');
+    style.id = 'dialog-scrollbar-style';
+    style.textContent = `
+      .dialog-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .dialog-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .dialog-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(120, 140, 200, 0.5) rgba(8, 12, 24, 0.8);
+        }
+        .dialog-scroll::-webkit-scrollbar {
+          display: block;
+          width: 8px;
+        }
+        .dialog-scroll::-webkit-scrollbar-track {
+          background: rgba(8, 12, 24, 0.6);
+          border-radius: 4px;
+        }
+        .dialog-scroll::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, rgba(100, 130, 220, 0.4), rgba(80, 100, 180, 0.5));
+          border-radius: 4px;
+        }
+        .dialog-scroll::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, rgba(120, 150, 240, 0.5), rgba(100, 120, 200, 0.6));
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   const title = document.createElement('div');
   title.style.fontWeight = '600';
@@ -318,39 +405,24 @@ const sketch = ({ canvas, gl, width, height }) => {
   sunLight.position.set(0, 0, 0);
   scene.add(sunLight);
 
+  const starBackground = createStarBackgroundTexture(width, height);
+  scene.background = starBackground.texture;
+
   const sun = new THREE.Mesh(
     new THREE.SphereGeometry(30, 48, 48),
     new THREE.MeshBasicMaterial({ color: 0xf5c542 })
   );
+  sun.userData.isSun = true;
   scene.add(sun);
 
-  const starsGeo = new THREE.BufferGeometry();
-  const starCount = 900;
-  const starPositions = new Float32Array(starCount * 3);
-  for (let i = 0; i < starCount; i++) {
-    starPositions[i * 3 + 0] = (Math.random() - 0.5) * 3000;
-    starPositions[i * 3 + 1] = (Math.random() - 0.5) * 2200;
-    starPositions[i * 3 + 2] = -600 - Math.random() * 1800;
-  }
-  starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-
-  const stars = new THREE.Points(
-    starsGeo,
-    new THREE.PointsMaterial({
-      size: 7,
-      map: makeStarTexture(),
-      transparent: true,
-      opacity: 0.8,
-      depthWrite: false,
-      color: 0xffffff
-    })
-  );
-  scene.add(stars);
+  const sunAudio = new Audio('audio/Lebron James flashbang.mp3');
+  sunAudio.volume = 0.8;
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
   let hoverPlanet = null;
+  let hoverSun = false;
   let selectedPlanet = null;
   let selectedOrbiter = null;
   let selectedScreen = { x: 0, y: 0 };
@@ -387,15 +459,19 @@ const sketch = ({ canvas, gl, width, height }) => {
 
     if (planet.ring) {
       const ringTexture = loadTexture(planet.ringTexture);
+      ringTexture.wrapS = ringTexture.wrapT = THREE.RepeatWrapping;
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(planet.size * 1.65, planet.size * 2.7, 220),
+        new THREE.RingGeometry(planet.size * 1.2, planet.size * 2.25, 160),
         new THREE.MeshBasicMaterial({
           map: ringTexture,
           transparent: true,
-          side: THREE.DoubleSide
+          opacity: 0.95,
+          alphaTest: 0.1,
+          side: THREE.DoubleSide,
+          depthWrite: false
         })
       );
-      ring.rotation.x = Math.PI / 2.8;
+      ring.rotation.x = Math.PI / 2 - 0.4;
       mesh.add(ring);
     }
 
@@ -427,6 +503,69 @@ const sketch = ({ canvas, gl, width, height }) => {
     e.stopPropagation();
     closeDialog();
   });
+
+  const zoomControls = document.createElement('div');
+  zoomControls.style.position = 'fixed';
+  zoomControls.style.bottom = '20px';
+  zoomControls.style.right = '20px';
+  zoomControls.style.display = 'flex';
+  zoomControls.style.flexDirection = 'column';
+  zoomControls.style.gap = '8px';
+  zoomControls.style.zIndex = '25';
+  zoomControls.style.pointerEvents = 'auto';
+  zoomControls.style.webkitTapHighlightColor = 'transparent';
+
+  const ZOOM_STEP = 100;
+  const ZOOM_MIN = 240;
+  const ZOOM_MAX = 1800;
+
+  function createZoomButton(symbol) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = symbol;
+    btn.style.width = '48px';
+    btn.style.height = '48px';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '50%';
+    btn.style.background = 'rgba(255,255,255,0.12)';
+    btn.style.color = 'white';
+    btn.style.fontSize = '24px';
+    btn.style.fontWeight = '600';
+    btn.style.cursor = 'pointer';
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+    btn.style.boxShadow = '0 2px 12px rgba(0,0,0,0.4)';
+    btn.style.transition = 'background 0.2s, transform 0.15s';
+    btn.style.webkitTapHighlightColor = 'transparent';
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'rgba(255,255,255,0.22)';
+      btn.style.transform = 'scale(1.05)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'rgba(255,255,255,0.12)';
+      btn.style.transform = 'scale(1)';
+    });
+    return btn;
+  }
+
+  const zoomInBtn = createZoomButton('+');
+  const zoomOutBtn = createZoomButton('−');
+  zoomInBtn.addEventListener('click', () => {
+    mainDistance = Math.max(ZOOM_MIN, mainDistance - ZOOM_STEP);
+  });
+  zoomOutBtn.addEventListener('click', () => {
+    mainDistance = Math.min(ZOOM_MAX, mainDistance + ZOOM_STEP);
+  });
+
+  zoomControls.appendChild(zoomInBtn);
+  zoomControls.appendChild(zoomOutBtn);
+  document.body.appendChild(zoomControls);
+
+  function updateZoomButtonsVisibility() {
+    zoomControls.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+  }
+  updateZoomButtonsVisibility();
 
   const previewRenderer = new THREE.WebGLRenderer({
     canvas: dialogUI.previewCanvas,
@@ -512,16 +651,19 @@ const sketch = ({ canvas, gl, width, height }) => {
 
     if (planet.ring) {
       const previewRingTexture = loadTexture(planet.ringTexture);
+      previewRingTexture.wrapS = previewRingTexture.wrapT = THREE.RepeatWrapping;
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(78, 122, 240),
+        new THREE.RingGeometry(62, 110, 180),
         new THREE.MeshBasicMaterial({
           map: previewRingTexture,
           transparent: true,
-          opacity: 1,
-          side: THREE.DoubleSide
+          opacity: 0.95,
+          alphaTest: 0.1,
+          side: THREE.DoubleSide,
+          depthWrite: false
         })
       );
-      ring.rotation.x = Math.PI / 2.7;
+      ring.rotation.x = Math.PI / 2 - 0.4;
       previewMesh.add(ring);
     }
 
@@ -537,17 +679,72 @@ const sketch = ({ canvas, gl, width, height }) => {
     };
   }
 
-  function updateHoverFromClient(clientX, clientY) {
+  function raycastFromClient(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const localX = clientX - rect.left;
     const localY = clientY - rect.top;
-
     pointer.x = (localX / rect.width) * 2 - 1;
     pointer.y = -(localY / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
+    const allTargets = [sun, ...orbiters.map((o) => o.mesh)];
+    return raycaster.intersectObjects(allTargets, false);
+  }
 
-    const hits = raycaster.intersectObjects(orbiters.map((o) => o.mesh), false);
-    hoverPlanet = hits.length ? hits[0].object.userData.planet : null;
+  function updateHoverFromClient(clientX, clientY) {
+    const hits = raycastFromClient(clientX, clientY);
+    const hit = hits[0];
+    if (hit && hit.object.userData.isSun) {
+      hoverPlanet = null;
+      hoverSun = true;
+    } else if (hit && hit.object.userData.planet) {
+      hoverPlanet = hit.object.userData.planet;
+      hoverSun = false;
+    } else {
+      hoverPlanet = null;
+      hoverSun = false;
+    }
+  }
+
+  function triggerSunWaveEasterEgg() {
+    if (window._sunWaveActive) return;
+    window._sunWaveActive = true;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;background:#000;transition:background 2.5s ease-out;';
+    document.body.appendChild(overlay);
+
+    const memeContainer = document.createElement('div');
+    memeContainer.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:min(90vw,520px);max-height:75vh;opacity:0;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:opacity 0.6s ease-in;';
+    const memeImg = document.createElement('img');
+    memeImg.src = 'images/lebron-sunshine.png';
+    memeImg.alt = 'You Are My Sunshine';
+    memeImg.style.cssText = 'max-width:100%;max-height:75vh;object-fit:contain;';
+    memeImg.onerror = () => {
+      memeContainer.innerHTML = '';
+      const fallback = document.createElement('div');
+      fallback.style.cssText = 'text-align:center;font-size:clamp(24px,6vw,48px);font-weight:700;color:#333;padding:40px;';
+      fallback.textContent = '☀️ You Are My Sunshine ☀️';
+      memeContainer.appendChild(fallback);
+    };
+    memeContainer.appendChild(memeImg);
+    document.body.appendChild(memeContainer);
+
+    sunAudio.currentTime = 3;
+    sunAudio.play();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        overlay.style.background = '#fff';
+      });
+    });
+
+    const explosionDuration = 2500;
+    const steps = [0.15, 0.35, 0.55, 0.8, 1];
+    steps.forEach((opacity, i) => {
+      setTimeout(() => {
+        memeContainer.style.opacity = String(opacity);
+      }, explosionDuration + 200 + i * 450);
+    });
   }
 
   function updateDialogStyle(planet) {
@@ -627,11 +824,17 @@ const sketch = ({ canvas, gl, width, height }) => {
     }
 
     updateHoverFromClient(e.clientX, e.clientY);
-    canvas.style.cursor = hoverPlanet ? 'pointer' : 'grab';
+    canvas.style.cursor = (hoverPlanet || hoverSun) ? 'pointer' : 'grab';
   }
 
   function onCanvasPointerDown(e) {
     updateHoverFromClient(e.clientX, e.clientY);
+
+    const hits = raycastFromClient(e.clientX, e.clientY);
+    if (hits.length && hits[0].object.userData.isSun) {
+      triggerSunWaveEasterEgg();
+      return;
+    }
 
     if (hoverPlanet) {
       selectedPlanet = hoverPlanet;
@@ -657,7 +860,7 @@ const sketch = ({ canvas, gl, width, height }) => {
   function endMainDrag() {
     mainDragging = false;
     activeMainPointerId = null;
-    canvas.style.cursor = hoverPlanet ? 'pointer' : 'grab';
+    canvas.style.cursor = (hoverPlanet || hoverSun) ? 'pointer' : 'grab';
   }
 
   function endPreviewDrag() {
@@ -698,6 +901,7 @@ const sketch = ({ canvas, gl, width, height }) => {
     applyResponsiveDialogLayout(dialogUI);
     syncPreviewRendererSize();
     updateDialogPosition();
+    updateZoomButtonsVisibility();
   }
 
   dialogUI.previewBox.addEventListener('pointerdown', (e) => {
@@ -799,6 +1003,8 @@ const sketch = ({ canvas, gl, width, height }) => {
     },
 
     resize({ viewportWidth, viewportHeight }) {
+      starBackground.draw(viewportWidth, viewportHeight);
+      starBackground.texture.needsUpdate = true;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(viewportWidth, viewportHeight, false);
       camera.aspect = viewportWidth / viewportHeight;
@@ -819,6 +1025,8 @@ const sketch = ({ canvas, gl, width, height }) => {
       window.removeEventListener('resize', onWindowResize);
 
       dialogUI.dialog.remove();
+      zoomControls.remove();
+      starBackground.texture.dispose();
       previewRenderer.dispose();
       renderer.dispose();
     }
