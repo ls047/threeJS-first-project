@@ -1,10 +1,12 @@
 const canvasSketch = require('canvas-sketch');
 const THREE = require('three');
 
+document.documentElement.style.webkitTapHighlightColor = 'transparent';
 document.body.style.margin = '0';
 document.body.style.overflow = 'hidden';
 document.body.style.background = '#000';
 document.body.style.touchAction = 'none';
+document.body.style.webkitTapHighlightColor = 'transparent';
 
 const settings = {
   animate: true,
@@ -162,6 +164,7 @@ function createDialog() {
   dialog.style.fontFamily = 'system-ui, -apple-system, sans-serif';
   dialog.style.userSelect = 'none';
   dialog.style.overflow = 'hidden';
+  dialog.style.webkitTapHighlightColor = 'transparent';
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
@@ -284,6 +287,8 @@ function createDialog() {
 }
 
 const sketch = ({ canvas, gl, width, height }) => {
+  canvas.style.webkitTapHighlightColor = 'transparent';
+
   const renderer = new THREE.WebGLRenderer({
     canvas,
     context: gl
