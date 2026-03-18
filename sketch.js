@@ -37,9 +37,13 @@ function preloadAssets(onProgress) {
       const ext = url.split('.').pop().toLowerCase();
       if (ext === 'mp3' || ext === 'ogg' || ext === 'wav') {
         const a = new Audio();
-        a.addEventListener('canplaythrough', () => tick(), { once: true });
-        a.addEventListener('error', () => tick());
+        let done = false;
+        const doneTick = () => { if (!done) { done = true; tick(); } };
+        a.addEventListener('canplaythrough', doneTick, { once: true });
+        a.addEventListener('loadeddata', doneTick, { once: true });
+        a.addEventListener('error', doneTick);
         a.src = url;
+        setTimeout(doneTick, 8000);
       } else {
         const img = new Image();
         img.onload = tick;
