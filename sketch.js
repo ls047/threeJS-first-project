@@ -70,22 +70,22 @@ function getResponsiveDialogMetrics() {
   const isMobile = vw <= 768;
   const isSmallMobile = vw <= 520;
 
-  const margin = Math.max(10, Math.min(20, vw * 0.03));
-  const width = Math.min(820, vw - margin * 2);
+  const margin = Math.max(8, Math.min(16, vw * 0.025));
+  const width = Math.min(400, vw - margin * 2);
   const maxHeight = vh - margin * 2;
 
   let previewSize;
   let height;
 
   if (isSmallMobile) {
-    previewSize = Math.min(220, width - 40);
-    height = Math.min(maxHeight, previewSize + 250);
+    previewSize = Math.min(120, width - 32);
+    height = Math.min(maxHeight, previewSize + 175);
   } else if (isMobile) {
-    previewSize = Math.min(260, width - 48);
-    height = Math.min(maxHeight, previewSize + 250);
+    previewSize = Math.min(140, width - 36);
+    height = Math.min(maxHeight, previewSize + 180);
   } else {
-    previewSize = Math.max(220, Math.min(320, width * 0.39));
-    height = Math.min(maxHeight, Math.max(360, previewSize + 80));
+    previewSize = Math.max(120, Math.min(160, width * 0.42));
+    height = Math.min(maxHeight, Math.max(260, previewSize + 100));
   }
 
   return {
@@ -111,37 +111,37 @@ function applyResponsiveDialogLayout(dialogUI) {
 
   dialogUI.dialog.style.width = `${width}px`;
   dialogUI.dialog.style.height = `${height}px`;
-  dialogUI.dialog.style.padding = isMobile ? '16px' : '28px';
-  dialogUI.dialog.style.borderRadius = isMobile ? '20px' : '30px';
+  dialogUI.dialog.style.padding = isMobile ? '12px' : '16px';
+  dialogUI.dialog.style.borderRadius = isMobile ? '14px' : '16px';
 
-  dialogUI.closeButton.style.top = isMobile ? '10px' : '12px';
-  dialogUI.closeButton.style.right = isMobile ? '10px' : '12px';
-  dialogUI.closeButton.style.width = isMobile ? '36px' : '42px';
-  dialogUI.closeButton.style.height = isMobile ? '36px' : '42px';
-  dialogUI.closeButton.style.fontSize = isMobile ? '24px' : '28px';
+  dialogUI.closeButton.style.top = isMobile ? '6px' : '8px';
+  dialogUI.closeButton.style.right = isMobile ? '6px' : '8px';
+  dialogUI.closeButton.style.width = isMobile ? '28px' : '30px';
+  dialogUI.closeButton.style.height = isMobile ? '28px' : '30px';
+  dialogUI.closeButton.style.fontSize = isMobile ? '18px' : '20px';
 
   dialogUI.wrap.style.flexDirection = isMobile ? 'column' : 'row';
-  dialogUI.wrap.style.gap = isMobile ? '14px' : '28px';
+  dialogUI.wrap.style.gap = isMobile ? '10px' : '14px';
 
   dialogUI.previewBox.style.width = `${previewSize}px`;
   dialogUI.previewBox.style.height = `${previewSize}px`;
   dialogUI.previewBox.style.flex = `0 0 ${previewSize}px`;
   dialogUI.previewBox.style.alignSelf = isMobile ? 'center' : 'stretch';
-  dialogUI.previewBox.style.borderRadius = isMobile ? '18px' : '24px';
+  dialogUI.previewBox.style.borderRadius = isMobile ? '10px' : '12px';
 
-  dialogUI.text.style.paddingTop = isMobile ? '28px' : '10px';
+  dialogUI.text.style.paddingTop = isMobile ? '20px' : '4px';
 
-  dialogUI.title.style.fontSize = isMobile ? '28px' : '46px';
-  dialogUI.subtitle.style.fontSize = isMobile ? '15px' : '21px';
-  dialogUI.controls.style.fontSize = isMobile ? '15px' : '22px';
-  dialogUI.stat1.style.fontSize = isMobile ? '18px' : '26px';
-  dialogUI.stat2.style.fontSize = isMobile ? '18px' : '26px';
-  dialogUI.extra.style.fontSize = isMobile ? '14px' : '20px';
+  dialogUI.title.style.fontSize = isMobile ? '20px' : '26px';
+  dialogUI.subtitle.style.fontSize = isMobile ? '11px' : '13px';
+  dialogUI.controls.style.fontSize = isMobile ? '11px' : '12px';
+  dialogUI.stat1.style.fontSize = isMobile ? '13px' : '14px';
+  dialogUI.stat2.style.fontSize = isMobile ? '13px' : '14px';
+  dialogUI.extra.style.fontSize = isMobile ? '11px' : '12px';
 
-  dialogUI.subtitle.style.marginBottom = isMobile ? '12px' : '26px';
-  dialogUI.controls.style.marginBottom = isMobile ? '14px' : '28px';
-  dialogUI.stat1.style.marginBottom = isMobile ? '8px' : '14px';
-  dialogUI.stat2.style.marginBottom = isMobile ? '10px' : '18px';
+  dialogUI.subtitle.style.marginBottom = isMobile ? '6px' : '8px';
+  dialogUI.controls.style.marginBottom = isMobile ? '8px' : '10px';
+  dialogUI.stat1.style.marginBottom = isMobile ? '4px' : '6px';
+  dialogUI.stat2.style.marginBottom = isMobile ? '6px' : '8px';
 
   return metrics;
 }
@@ -153,12 +153,13 @@ function createDialog() {
   dialog.style.top = '0px';
   dialog.style.display = 'none';
   dialog.style.pointerEvents = 'auto';
-  dialog.style.background = 'rgba(10, 12, 25, 0.97)';
-  dialog.style.backdropFilter = 'blur(14px)';
+  dialog.style.background = 'rgba(8, 10, 20, 0.95)';
+  dialog.style.backdropFilter = 'blur(20px)';
+  dialog.style.webkitBackdropFilter = 'blur(20px)';
   dialog.style.boxSizing = 'border-box';
   dialog.style.zIndex = '30';
-  dialog.style.color = 'white';
-  dialog.style.fontFamily = 'Arial, sans-serif';
+  dialog.style.color = '#f0f2f5';
+  dialog.style.fontFamily = 'system-ui, -apple-system, sans-serif';
   dialog.style.userSelect = 'none';
   dialog.style.overflow = 'hidden';
 
@@ -166,14 +167,14 @@ function createDialog() {
   closeButton.type = 'button';
   closeButton.innerHTML = '&times;';
   closeButton.style.position = 'absolute';
-  closeButton.style.top = '12px';
-  closeButton.style.right = '12px';
-  closeButton.style.width = '42px';
-  closeButton.style.height = '42px';
+  closeButton.style.top = '8px';
+  closeButton.style.right = '8px';
+  closeButton.style.width = '30px';
+  closeButton.style.height = '30px';
   closeButton.style.border = 'none';
   closeButton.style.borderRadius = '50%';
-  closeButton.style.background = 'rgba(255,255,255,0.10)';
-  closeButton.style.color = 'white';
+  closeButton.style.background = 'rgba(255,255,255,0.08)';
+  closeButton.style.color = 'rgba(255,255,255,0.9)';
   closeButton.style.fontSize = '28px';
   closeButton.style.lineHeight = '1';
   closeButton.style.cursor = 'pointer';
@@ -186,12 +187,12 @@ function createDialog() {
   dialog.appendChild(closeButton);
 
   closeButton.addEventListener('mouseenter', () => {
-    closeButton.style.background = 'rgba(255,255,255,0.18)';
-    closeButton.style.transform = 'scale(1.05)';
+    closeButton.style.background = 'rgba(255,255,255,0.15)';
+    closeButton.style.transform = 'scale(1.06)';
   });
 
   closeButton.addEventListener('mouseleave', () => {
-    closeButton.style.background = 'rgba(255,255,255,0.10)';
+    closeButton.style.background = 'rgba(255,255,255,0.08)';
     closeButton.style.transform = 'scale(1)';
   });
 
@@ -203,9 +204,10 @@ function createDialog() {
 
   const previewBox = document.createElement('div');
   previewBox.style.overflow = 'hidden';
-  previewBox.style.background = 'rgba(255,255,255,0.04)';
+  previewBox.style.background = 'rgba(0,0,0,0.3)';
   previewBox.style.cursor = 'grab';
-  previewBox.style.boxShadow = '0 0 35px rgba(255,255,255,0.08)';
+  previewBox.style.borderRadius = '12px';
+  previewBox.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.06)';
   previewBox.style.touchAction = 'none';
   wrap.appendChild(previewBox);
 
@@ -221,40 +223,43 @@ function createDialog() {
   text.style.flexDirection = 'column';
   text.style.justifyContent = 'flex-start';
   text.style.minWidth = '0';
+  text.style.minHeight = '0';
+  text.style.overflowY = 'auto';
+  text.style.overflowX = 'hidden';
   wrap.appendChild(text);
 
   const title = document.createElement('div');
-  title.style.fontWeight = '700';
-  title.style.lineHeight = '1.1';
-  title.style.marginBottom = '12px';
+  title.style.fontWeight = '600';
+  title.style.lineHeight = '1.2';
+  title.style.marginBottom = '4px';
+  title.style.letterSpacing = '-0.02em';
   text.appendChild(title);
 
   const subtitle = document.createElement('div');
-  subtitle.style.fontWeight = '600';
+  subtitle.style.fontWeight = '500';
   text.appendChild(subtitle);
 
   const controls = document.createElement('div');
-  controls.style.lineHeight = '1.7';
-  controls.style.color = 'rgba(255,255,255,0.88)';
-  controls.innerHTML = `
-    Drag the planet preview to rotate it<br>
-    Use the mouse wheel or touch drag to explore
-  `;
+  controls.style.lineHeight = '1.4';
+  controls.style.color = 'rgba(255,255,255,0.5)';
+  controls.innerHTML = 'Drag to rotate · Scroll to zoom';
   text.appendChild(controls);
 
   const stat1 = document.createElement('div');
-  stat1.style.fontWeight = '600';
-  stat1.style.color = 'rgba(255,255,255,0.96)';
+  stat1.style.fontWeight = '500';
+  stat1.style.color = 'rgba(255,255,255,0.92)';
+  stat1.style.lineHeight = '1.35';
   text.appendChild(stat1);
 
   const stat2 = document.createElement('div');
-  stat2.style.fontWeight = '600';
-  stat2.style.color = 'rgba(255,255,255,0.96)';
+  stat2.style.fontWeight = '500';
+  stat2.style.color = 'rgba(255,255,255,0.92)';
+  stat2.style.lineHeight = '1.35';
   text.appendChild(stat2);
 
   const extra = document.createElement('div');
-  extra.style.lineHeight = '1.5';
-  extra.style.color = 'rgba(255,255,255,0.72)';
+  extra.style.lineHeight = '1.4';
+  extra.style.color = 'rgba(255,255,255,0.58)';
   text.appendChild(extra);
 
   document.body.appendChild(dialog);
@@ -541,12 +546,12 @@ const sketch = ({ canvas, gl, width, height }) => {
   }
 
   function updateDialogStyle(planet) {
-    const glow = hexToRgba(planet.tint, 0.75);
-    const glowSoft = hexToRgba(planet.tint, 0.28);
-    const glowBorder = hexToRgba(planet.tint, 0.95);
+    const glow = hexToRgba(planet.tint, 0.4);
+    const glowSoft = hexToRgba(planet.tint, 0.15);
+    const glowBorder = hexToRgba(planet.tint, 0.55);
 
-    dialogUI.dialog.style.boxShadow = `0 0 22px ${glow}, 0 0 42px ${glowSoft}`;
-    dialogUI.dialog.style.border = `2px solid ${glowBorder}`;
+    dialogUI.dialog.style.boxShadow = `0 4px 24px rgba(0,0,0,0.4), 0 0 12px ${glow}`;
+    dialogUI.dialog.style.border = `1px solid ${glowBorder}`;
 
     dialogUI.title.textContent = planet.name;
     dialogUI.subtitle.textContent = 'Planet Information';
